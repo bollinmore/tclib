@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.env
+database-*.sqlite3
+xenv/
+debug.log
+help.md
+credential.json
