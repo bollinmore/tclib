@@ -133,6 +133,16 @@ class Libtool():
 
         return sorted(data, key=lambda k: k['due'])
 
+    def peek_remaining(self) -> int:
+        if not self.bLogin:
+            raise Exception("Not login")
+
+        r = self.sess.get(Libtool.url_request,
+                          headers=self.sess.headers, cookies=self.sess.cookies)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        p = soup.select('#menu > div.menu_box > div.menu_items_content > ul > li:nth-child(1) > div > div > p:nth-child(2) > span')
+        return 6 - int(p[0].text.strip('()'))
+
     def get_overdue(self) -> list():
         if len(self.borrow_books) == 0:
             return []
@@ -161,10 +171,11 @@ class Libtool():
     @staticmethod
     def pretty_msg_due(source) -> str:
         msg = u'即將到期：\n'
-        for k, v in source.items():
+        for k, v in {k: v for k, v in source.items() if v}.items():
             msg += "{}:\n".format(k)
             for b in v:
                 msg += "{} 預約人數:{} 續借次數:{} 到期日:{}\n".format(b['name'][0:15], b['reservation'], b['renew'], b['due'])
+
             msg += "-------------\n\n"
 
         return msg
@@ -172,11 +183,12 @@ class Libtool():
     @staticmethod
     def pretty_msg_overdue(source) -> str:
         msg = u'逾期：\n'
-        for k, v in source.items():
+        for k, v in {k: v for k, v in source.items() if v}.items():
             msg += "{}:\n".format(k)
             for b in v:
                 msg += "{} 預約人數:{} 續借次數:{} 到期日:{}\n".format(
                     b['name'][0:15], b['reservation'], b['renew'], b['due'])
+
             msg += "-------------\n\n"
 
         return msg
@@ -184,16 +196,26 @@ class Libtool():
     @staticmethod
     def pretty_msg_available(source) -> str:
         msg = u'預約可取：\n'
-        for k, v in source.items():
+        for k, v in {k: v for k, v in source.items() if v}.items():
             msg += "{}:\n".format(k)
             for b in v:
                 msg += "{} {}\n".format(b['name'][0:15], b['due'])
+
             msg += "-------------\n\n"
 
         return msg
 
     @staticmethod
-    def pretty_msg(available=None, due=None, overdue=None) -> str:
+    def pretty_msg_remaining(source) -> str:
+        msg = u'帳號剩餘數量：\n'
+        for k, v in source.items():
+            msg += "{}:{}\n".format(k, v)
+
+        return msg
+
+
+    @staticmethod
+    def pretty_msg(available=None, due=None, overdue=None, remaining=None) -> str:
         msg = ""
         if available:
             msg += Libtool.pretty_msg_available(available)
@@ -203,6 +225,9 @@ class Libtool():
 
         if overdue:
             msg += Libtool.pretty_msg_overdue(overdue)
+
+        if remaining:
+            msg += Libtool.pretty_msg_remaining(remaining)
 
         return msg
 

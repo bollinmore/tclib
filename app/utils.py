@@ -15,7 +15,7 @@ class ModelMixin(object):
 
 # Add your own utility classes and functions here.
 def do_fetch_books():
-    ab, ob, db = {}, {}, {}
+    ab, ob, db, rem = {}, {}, {}, {}
 
     acc = os.environ.get('TCLIB_ACCOUNT').split(";")
     pwd = os.environ.get('TCLIB_PASSWORD').split(";")
@@ -28,16 +28,19 @@ def do_fetch_books():
         ab[acc[ix]] = obj.available_books
         ob[acc[ix]] = obj.overdue_books
         db[acc[ix]] = obj.due_books
+        rem[acc[ix]] = obj.peek_remaining()
 
     msg_ab = Libtool.pretty_msg(available=ab)
     msg_db = Libtool.pretty_msg(due=db)
     msg_ob = Libtool.pretty_msg(overdue=ob)
+    msg_rem = Libtool.pretty_msg(remaining=rem)
 
     cb = chatbot(token, secret)
 
     cb.brocast(msg_ab)
     cb.brocast(msg_db)
     cb.brocast(msg_ob)
+    cb.brocast(msg_rem)
     del cb
 
     # cf = os.path.join(os.getcwd(), "credential.json")
