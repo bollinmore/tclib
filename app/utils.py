@@ -3,7 +3,6 @@ from app.line_chatbot import chatbot
 from app.tclib import Libtool
 from . import db
 
-
 class ModelMixin(object):
 
     def save(self):
@@ -11,7 +10,6 @@ class ModelMixin(object):
         db.session.add(self)
         db.session.commit()
         return self
-
 
 # Add your own utility classes and functions here.
 def do_fetch_books():

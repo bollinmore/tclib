@@ -1,5 +1,5 @@
 import os
-
+from celery import Celery
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -9,6 +9,9 @@ from werkzeug.exceptions import HTTPException
 login_manager = LoginManager()
 db = SQLAlchemy()
 
+celery = Celery(__name__, backend=os.environ.get(
+    'REDIS_URL'), broker=os.environ.get('REDIS_URL'))
+celery.autodiscover_tasks(['app.tasks.add', 'app.tasks.fetch'], force=True)
 
 def create_app(environment='development'):
 

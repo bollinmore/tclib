@@ -6,3 +6,5 @@ xenv/
 debug.log
 help.md
 credential.json
+
+app/test.py

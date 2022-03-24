@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import click
 
-from app import create_app, db, models, forms, utils
+from app import create_app, db, models, forms
+from app.tasks.fetch import fetch
 
 app = create_app()
-
 
 # flask cli context setup
 @app.shell_context_processor
@@ -28,7 +28,9 @@ def drop_db():
 
 @app.cli.command('')
 def fetch_books():
-    utils.do_fetch_books()
+    r = fetch.delay()
+    r.wait()
+    print('Done')
 
 if __name__ == '__main__':
     app.run()
