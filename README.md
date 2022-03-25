@@ -38,3 +38,4 @@ Based on your environment to setup Environment Variable, here are the example to
 * $env:TCLIB_PASSWORD = "password1;password2";
 * $env:LINE_TOKEN = "Token number from LINE chat bot";
 * $env:LINE_SECRET = "Channel Secret of LINE chat bot";
+* $env:REDIS_URL = "Redis URL"

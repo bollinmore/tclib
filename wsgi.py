@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import click
 
-from app import create_app, db, models, forms
-from app.tasks.fetch import fetch
+from app import create_app, db, models, forms, utils
 
 app = create_app()
 
@@ -28,8 +27,7 @@ def drop_db():
 
 @app.cli.command('')
 def fetch_books():
-    r = fetch.delay()
-    r.wait()
+    utils.do_fetch_books()
     print('Done')
 
 if __name__ == '__main__':
