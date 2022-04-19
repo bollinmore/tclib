@@ -213,9 +213,22 @@ class Libtool():
 
         return msg
 
+    @staticmethod
+    def pretty_msg_borrow(source) -> str:
+        msg = u'已借書籍：\n'
+        for k, v in {k: v for k, v in source.items() if v}.items():
+            msg += "{}:\n".format(k)
+            for b in v:
+                msg += "{} 預約人數:{} 續借次數:{} 到期日:{}\n".format(
+                    b['name'][0:15], b['reservation'], b['renew'], b['due'])
+
+            msg += "-------------\n\n"
+
+        return msg
+
 
     @staticmethod
-    def pretty_msg(available=None, due=None, overdue=None, remaining=None) -> str:
+    def pretty_msg(available=None, due=None, overdue=None, remaining=None, borrow=None) -> str:
         msg = ""
         if available:
             msg += Libtool.pretty_msg_available(available)
@@ -228,6 +241,9 @@ class Libtool():
 
         if remaining:
             msg += Libtool.pretty_msg_remaining(remaining)
+
+        if borrow:
+            msg += Libtool.pretty_msg_borrow(borrow)
 
         return msg
 

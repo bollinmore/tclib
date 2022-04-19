@@ -61,3 +61,24 @@ def do_fetch_books():
     #     cb.brocast(msg_ab)
     #     cb.brocast(msg_bb)
     #     del cb
+
+
+def do_show_borrow():
+    bo = {}
+
+    acc = os.environ.get('TCLIB_ACCOUNT').split(";")
+    pwd = os.environ.get('TCLIB_PASSWORD').split(";")
+    token = os.environ.get('LINE_TOKEN')
+    secret = os.environ.get('LINE_SECRET')
+
+    obj = Libtool()
+    for ix in range(0, len(acc)):
+        obj.run(acc[ix], pwd[ix])
+        bo[acc[ix]] = obj.borrow_books
+
+    msg_bo = Libtool.pretty_msg(borrow=bo)
+
+    cb = chatbot(token, secret)
+
+    cb.brocast(msg_bo)
+    del cb

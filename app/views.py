@@ -1,4 +1,7 @@
+import datetime
+import os
 from flask import render_template, Blueprint, request, jsonify
+import pytz
 from app import line_chatbot
 from app.tasks.add import add
 from app.tasks.fetch import fetch
@@ -27,3 +30,11 @@ def test_add():
     r = add.delay(1, 1)
     return jsonify({'result':r.get()})
 
+@main_blueprint.route('/barcode/<string:id>')
+def barcode(id):
+    info = os.environ.get(id).split(";")
+    name = info[0]
+    cardId = info[1]
+    today = datetime.datetime.now(pytz.timezone(
+        'Asia/Taipei')).date().strftime("%m/%d/%Y")
+    return render_template('card_barcode.html', name=name, cardId=cardId, today=today)

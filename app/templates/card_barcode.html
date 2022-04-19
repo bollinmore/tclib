@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport"
+        content="viewport-fit=cover, user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>臺中市立圖書館APP-2019</title>
+
+    <link rel="stylesheet" href="/static/dist/css/main.min.css">
+</head>
+<body>
+    <header>
+        <div class="top">
+            <div class="logo">
+                <a>
+                    <img src="/static/dist/img/logo.svg" />
+                </a>
+            </div>
+            <div class="menu-butn"><img src="/static/dist/img/icon_menu.png" /></div>
+            <div class="member">
+                <a ><img src="/static/dist/img/icon_logout.png" onclick="closeFullscreen();" /> <p>登出</p></a>
+            </div>
+        </div>
+        <div class="fast-link">
+            <ul>
+                <li><a class="card"><div></div><p>行動借閱證</p></a></li>
+                <li><a class="library"><div></div><p>我的書房</p></a></li>
+                <li><a class="search"><div></div><p>館藏查詢</p></a></li>
+                <!--<li><a class="erm"><div></div><p>數位資源</p></a></li>-->
+                <li>
+                    <a class="erm" onclick="openFullscreen();">
+                        <div></div>
+                        <p>手機借書</p>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <h1 class="page-title">
+            <span>行動借閱證</span>
+            <a class="back mui-action-back">返回</a>
+        </h1>
+    </header>
+
+   <nav class="menu">
+		<ol>
+	<li>
+		<a>活動資訊</a>
+	</li>
+	<li>
+		<a>分館資訊</a>
+	</li>
+	<li>
+		<a>市圖官網</a>
+	</li>
+	<li>
+		<a>FB粉絲專頁</a>
+	</li>
+	<li>
+		<a>常見問題</a>
+	</li>
+	<li>
+		<a>帳號管理</a>
+		
+	</li>
+	<li>
+		<a>公佈欄</a>
+	</li>
+	<li>
+		<a>中市圖LINE@官方帳號</a>
+	</li>
+	<li>
+		<a>國資圖館藏查詢</a>
+	</li>
+
+</ol>
+		</nav>
+
+    <div class="main card-barcode">
+        <div class="info padding-box">
+            <p>姓名：<span class="font-color-light">{{name}}</span></p>
+            <p>借閱證號：<span class="font-color-light">{{cardId}}</span></p>
+            <p>條碼日期：<span class="font-color-light">{{today}}</span></p>
+        </div>
+
+        <p class="font-color-remind font-size-l font-align-c">10分00秒後返回首頁</p>
+        <p class="explanation font-color-remind">
+            不接受行動借閱證以截圖方式使用，<br/>
+            以保障個人權益。
+        </p>
+        <div class="barcode-img">
+        	
+        </div>
+    </div>
+    <!-- end of main -->
+</body>
+<script src="/static/js/jquery-3.5.1.min.js"></script>
+<script src="/static/dist/js/main.min.js"></script>
+
+
+<script type="text/javascript" src="/static/js/xss.js"></script>
+<script type="text/javascript" src="/static/js/xssCheck.js"></script>
+<script type="text/javascript" src="/static/js/mui.min.js"></script>
+<script type="text/javascript" src="/static/js/common.js"></script>
+
+<script type="text/javascript" src="/static/js/castapp.js"></script>
+<script type="text/javascript" src="/static/js/footer.js"></script>
+
+<script src="/static/js/jquery-barcode.js" type="text/javascript" charset="utf-8"></script>
+
+<script src="/static/js/ajax_page/card_bar_code.js" type="text/javascript" charset="utf-8"></script>
+
+<script type="text/javascript">
+
+    var elem = document.documentElement;
+    function openFullscreen() {
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE11 */
+                elem.msRequestFullscreen();
+            }
+        }
+
+    function closeFullscreen() {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) { /* Safari */
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) { /* IE11 */
+                document.msExitFullscreen();
+            }
+        }
+    
+    $(document).ready(function () {
+        // Handler for .ready() called.
+        var $timer = $('.font-align-c');
+        num = 600;
+        timer = setInterval(function () {
+            num--;
+            if (num < 1) {
+                clicked("index.html");
+                clearInterval(timer); //避免計時器累計
+
+            } else {
+                var minute = Math.floor(num / 60);
+                var second = Math.floor(num % 60);
+                $timer.html(minute + "分" + second + "秒後返回首頁");
+            }
+
+        }, 1000);
+
+        var $barcode = $(".barcode-img");
+        $barcode.barcode('{{cardId}}', "code128", {
+            output: "bmp",
+            barWidth: 2,
+            barHeight: $barcode.height() * 0.92,
+            showHRI: false
+        });
+        $barcode.removeAttr("style");
+    });
+</script>
+</html>
