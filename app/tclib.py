@@ -265,6 +265,24 @@ if __name__ == "__main__":
 
         del obj
 
+        ab, ob, db, rem = {}, {}, {}, {}
+        obj = Libtool()
+        for c in credential["cred"]:
+            obj.run(c['account'], c['password'])
+            ab[c['account']] = obj.available_books
+            ob[c['account']] = obj.overdue_books
+            db[c['account']] = obj.due_books
+            rem[c['account']] = obj.peek_remaining()
+
+        msg_ab = Libtool.pretty_msg(available=ab)
+        msg_db = Libtool.pretty_msg(due=db)
+        msg_ob = Libtool.pretty_msg(overdue=ob)
+        msg_rem = Libtool.pretty_msg(remaining=rem)
+
+        print(msg_ab)
+        print(msg_db)
+        print(msg_ob)
+        print(msg_rem)
 
     with open("result.txt", "w", encoding='utf-8') as f:
         f.write("Available\n=================\n")

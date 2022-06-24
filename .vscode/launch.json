@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Dev - tclib",
+            "name": "Python: Dev - tclib(Flask)",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/wsgi.py",
@@ -17,7 +17,7 @@
             },
         },
         {
-            "name": "Python: Staging - tclib",
+            "name": "Python: Staging - tclib(Flask)",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/wsgi.py",
@@ -27,6 +27,13 @@
                 "FLASK_ENV": "production",
                 "FLASK_DEBUG": "0"
             },
+        },
+        {
+            "name": "Python: Dev - tclib(Script)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/app/tclib.py",
+            "console": "integratedTerminal"
         }
     ]
 }

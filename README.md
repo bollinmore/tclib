@@ -1,9 +1,10 @@
 # TCLib crawler
 
-This app is used to fetch books status with specified account of Taiwan Taichung Library, you can get:  
+This app is used to fetch books status with specified account of Taiwan Taichung Library, you can get books below:  
 - Borrow
 - Request
 - Available
+- Remaining slot to reserve books
 
 **Structure**
 /app/
@@ -32,10 +33,40 @@ This same job can be run on-demand on a deployed Heroku app by typing:
 heroku run flask fetch-books
 ```
 
-**Account**
+**Configure App Info in the Environment Variable**
 Based on your environment to setup Environment Variable, here are the example to configure in the PowerShell
 * $env:TCLIB_ACCOUNT = "account1;account2";
 * $env:TCLIB_PASSWORD = "password1;password2";
 * $env:LINE_TOKEN = "Token number from LINE chat bot";
 * $env:LINE_SECRET = "Channel Secret of LINE chat bot";
 * $env:REDIS_URL = "Redis URL"
+
+## Fetch book status locally(Without Chatbot)
+1. Install Python and create a virtual environment.
+```
+python -m venv .venv
+```
+2. Activate the virtual environment and install the dependencies.
+```
+.venv/Scripts/activate
+pip install -r requirements.txt
+```
+3. create a file named *credential.json* and add account setting.
+```
+    {
+        "cred": [
+            {
+                "account": "id_1",
+                "password": "pw_1"
+            },
+            {
+                "account": "id_2",
+                "password": "pw_2"
+            }
+        ]
+    }
+```
+4. Run command below, and you'll get result from standard output.  
+```
+python app/tclib.py
+```
