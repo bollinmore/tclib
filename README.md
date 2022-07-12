@@ -67,6 +67,15 @@ pip install -r requirements.txt
     }
 ```
 4. Run command below, and you'll get result from standard output.  
+* -q: query status
 ```
-python app/tclib.py
+python app/tclib.py -q
 ```
+
+5. Run command below if you want to extend the period of book  
+* -e: extend
+* -u: user identity
+* -p: password
+* -b: book ID
+```
+python app/tclib.py -e -u <id> -p <pw> -b <bid>

@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta
+from enum import Enum
+import getopt
 import re
+import sys
 import requests
 import json
 import logging
@@ -13,6 +16,12 @@ class PersonalState():
         self.request = req 
         self.available = ava
 
+
+class RunMode(Enum):
+    UNDEF = 0
+    QUERY = 1
+    EXTEND = 2
+
 class Libtool():
     url_login = "https://ipac.library.taichung.gov.tw/webpac/login_iframe.cfm"
     url_logout = "https://ipac.library.taichung.gov.tw/webpac/ajax_page/doLogout.cfm"
@@ -20,6 +29,7 @@ class Libtool():
     url_search = "https://ipac.library.taichung.gov.tw/webpac/search.cfm"
     url_request = "https://ipac.library.taichung.gov.tw/webpac/shelf_request.cfm"
     url_available = "https://ipac.library.taichung.gov.tw/webpac/shelf_requset_desirable.cfm"
+    url_set_book = "https://ipac.library.taichung.gov.tw/webpac/set_book_status.cfm"
 
     pat_token = re.compile(
         r'<input\s+name="token"\s+value="([0-9A-F]*)"\s+type="hidden"\s+>')
@@ -93,7 +103,13 @@ class Libtool():
         data = []
         for lb in listbox:
             info = lb.find_all('p', class_='info_long')
-            book = {'name': lb.find_all('a', class_='bookname')[0].text, 'reservation': info[2].text.split(
+            """
+            info[0]: book id
+            info[2]: people who are waiting
+            info[3]: how many times we extend
+            info[5]: date to return books
+            """
+            book = {'book_id': info[0].text.split('：')[1], 'name': lb.find_all('a', class_='bookname')[0].text, 'reservation': info[2].text.split(
                 '：')[1], 'renew': info[3].text.split('：')[1], 'due': info[5].text.split('：')[1].strip()}
             data.append(book)
 
@@ -167,6 +183,38 @@ class Libtool():
 
         return data
 
+    def renew(self) -> bool:
+        """
+        path: set_book_status.cfm
+        parameter:
+            item=<book id>
+            action=borrow_extend
+        example:
+            URL = https://ipac.library.taichung.gov.tw/webpac/set_book_status.cfm?item=31350003144138&action=borrow_extend
+        """
+        raise Exception("Need to get book ID first.")
+        self.login(acc, pwd)
+        return True
+
+    def extend(self, book_id) -> bool:
+        """
+        path: set_book_status.cfm
+        parameter:
+            item=<book id>
+            action=borrow_extend
+        example:
+            URL = https://ipac.library.taichung.gov.tw/webpac/set_book_status.cfm?item=31350003144138&action=borrow_extend
+        """
+
+        if not self.bLogin:
+            raise Exception("Not login")
+        
+        url = "{}?item={}&action=borrow_extend".format(Libtool.url_set_book, book_id)
+        r = self.sess.get(url, headers=self.sess.headers,
+                          cookies=self.sess.cookies)
+
+        return r.status_code == 200 and r.text.find("續借成功") != -1
+
 
     @staticmethod
     def pretty_msg_due(source) -> str:
@@ -174,7 +222,8 @@ class Libtool():
         for k, v in {k: v for k, v in source.items() if v}.items():
             msg += "{}:\n".format(k)
             for b in v:
-                msg += "{} 預約人數:{} 續借次數:{} 到期日:{}\n".format(b['name'][0:15], b['reservation'], b['renew'], b['due'])
+                # msg += "{} 預約人數:{} 續借次數:{} 到期日:{}\n".format(b['name'][0:15], b['reservation'], b['renew'], b['due'])
+                msg += f"{b['name'][0:15]}({b['book_id']}) 預約人數:{b['reservation']} 續借次數:{b['renew']} 到期日:{b['due']}\n"
 
             msg += "-------------\n\n"
 
@@ -252,43 +301,93 @@ if __name__ == "__main__":
     logging.basicConfig(filename='debug.log',
                         encoding='utf-8', level=logging.ERROR)
 
-    ab = {}
-    data = {}
+    mode = RunMode.UNDEF
+    usr = ""
+    pwd = ""
+    bid = ""
 
-    with open("credential.json") as f:
-        credential = json.load(f)
+    try:
+        """
+          Parameters:
+           -q => Query book status
+           -e => Extend book
+           -u <user> => User account
+           -p <password> => Password
+           -b <book ID> => Book ID
+        """
+        opts, args = getopt.getopt(sys.argv[1:], "qeu:p:b:")
+    except getopt.GetoptError:
+        print(sys.argv[0], 'usage: -q or -e -u <user> -p <pwd> -b <bid>')
+        sys.exit(2)
 
+    for opt, arg in opts:
+        if opt == "-q":
+            mode = RunMode.QUERY
+        elif opt == "-e":
+            mode = RunMode.EXTEND
+        elif opt == "-u":
+            usr = arg
+        elif opt == "-p":
+            pwd = arg
+        elif opt == "-b":
+            bid = arg
+        else:
+            assert False, "unhandled option"
+
+    if mode == RunMode.UNDEF:
+        raise ValueError("Unknown behavior.")
+
+    if mode == RunMode.QUERY:
+        ab = {}
+        data = {}
+
+        with open("credential.json") as f:
+            credential = json.load(f)
+
+            obj = Libtool()
+            for c in credential["cred"]:
+                obj.run(c['account'], c['password'])
+                ab[c['account']] = obj.available_books
+
+            del obj
+
+            ab, ob, db, rem = {}, {}, {}, {}
+            obj = Libtool()
+            for c in credential["cred"]:
+                obj.run(c['account'], c['password'])
+                ab[c['account']] = obj.available_books
+                ob[c['account']] = obj.overdue_books
+                db[c['account']] = obj.due_books
+                rem[c['account']] = obj.peek_remaining()
+
+            msg_ab = Libtool.pretty_msg(available=ab)
+            msg_db = Libtool.pretty_msg(due=db)
+            msg_ob = Libtool.pretty_msg(overdue=ob)
+            msg_rem = Libtool.pretty_msg(remaining=rem)
+
+            print(msg_ab)
+            print(msg_db)
+            print(msg_ob)
+            print(msg_rem)
+
+        with open("result.txt", "w", encoding='utf-8') as f:
+            f.write("Available\n=================\n")
+            for k, v  in ab.items():
+                f.write(k+"\n")
+                for b in v:
+                    f.write("{} {}\n".format(b['name'][0:15], b['due']))
+
+                f.write("\n")
+    elif mode == RunMode.EXTEND:
+        if usr == "" or pwd == "" or bid == "":
+            raise ValueError("Need account/password/bookID")
+
+        """
+        Test to extend books
+        """
         obj = Libtool()
-        for c in credential["cred"]:
-            obj.run(c['account'], c['password'])
-            ab[c['account']] = obj.available_books
-
-        del obj
-
-        ab, ob, db, rem = {}, {}, {}, {}
-        obj = Libtool()
-        for c in credential["cred"]:
-            obj.run(c['account'], c['password'])
-            ab[c['account']] = obj.available_books
-            ob[c['account']] = obj.overdue_books
-            db[c['account']] = obj.due_books
-            rem[c['account']] = obj.peek_remaining()
-
-        msg_ab = Libtool.pretty_msg(available=ab)
-        msg_db = Libtool.pretty_msg(due=db)
-        msg_ob = Libtool.pretty_msg(overdue=ob)
-        msg_rem = Libtool.pretty_msg(remaining=rem)
-
-        print(msg_ab)
-        print(msg_db)
-        print(msg_ob)
-        print(msg_rem)
-
-    with open("result.txt", "w", encoding='utf-8') as f:
-        f.write("Available\n=================\n")
-        for k, v  in ab.items():
-            f.write(k+"\n")
-            for b in v:
-                f.write("{} {}\n".format(b['name'][0:15], b['due']))
-
-            f.write("\n")
+        obj.login(usr, pwd)
+        r = obj.extend(bid)
+        if not r:
+            print(f"Fail to extend book:{bid}")
+        obj.logout()
