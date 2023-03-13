@@ -8,6 +8,11 @@ import json
 import logging
 from bs4 import BeautifulSoup
 
+try:
+    from line_chatbot import chatbot
+except:
+    print("Unable to import chatbot, did you set LINE token and channel secret correctly?")
+
 class PersonalState():
     def __init__(self, id, rem, bor, req, ava) -> None:
         self.id = id
@@ -369,6 +374,16 @@ if __name__ == "__main__":
             print(msg_db)
             print(msg_ob)
             print(msg_rem)
+
+            try:
+                cb = chatbot()
+                cb.brocast(msg_ab)
+                cb.brocast(msg_db)
+                cb.brocast(msg_ob)
+                cb.brocast(msg_rem)
+            except Exception as e:
+                print(str(e))
+                print("Unable to send data to Line chatbot, did you set SECRET and TOKEN correctly?")
 
         with open("result.txt", "w", encoding='utf-8') as f:
             f.write("Available\n=================\n")
